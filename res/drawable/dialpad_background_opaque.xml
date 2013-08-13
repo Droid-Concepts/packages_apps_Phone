@@ -23,8 +23,7 @@
     <!-- ...and the "dial_background_texture" tiled on top. -->
     <item>
         <bitmap xmlns:android="http://schemas.android.com/apk/res/android"
-                android:src="@drawable/dial_background_texture"
-                android:tileMode="repeat" />
+                android:src="@drawable/dial_background_dark" />
     </item>
 
 </layer-list>
