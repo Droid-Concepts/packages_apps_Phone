@@ -205,8 +205,34 @@ public class Ringer {
                 } else {
                     mRingerVolumeSetting = -1;
                 }
+
                 mFirstRingEventTime = SystemClock.elapsedRealtime();
                 mRingHandler.sendEmptyMessage(PLAY_RING_ONCE);
+                ContentResolver cr = mContext.getContentResolver();
+                boolean increasing = Settings.System.getInt(cr,
+                        Settings.System.INCREASING_RING, 0) == 1;
+                int minVolume = Settings.System.getInt(cr,
+                        Settings.System.INCREASING_RING_MIN_VOLUME, 1);
+
+                if (increasing && minVolume < ringerVolume) {
+                    mRingIncreaseInterval = Settings.System.getInt(cr,
+                            Settings.System.INCREASING_RING_INTERVAL, 0);
+
+                    mRingerVolumeSetting = ringerVolume;
+                    mAudioManager.setStreamVolume(AudioManager.STREAM_RING, minVolume, 0);
+                    if (DBG) {
+                        log("increasing ring is enabled, starting at " +
+                                minVolume + "/" + ringerVolume);
+                    }
+                    if (mRingIncreaseInterval > 0) {
+                    }
+                    if (mRingIncreaseInterval > 0) {
+                        mHandler.sendEmptyMessageDelayed(
+                                INCREASE_RING_VOLUME, mRingIncreaseInterval);
+                    }
+                } else {
+                    mRingerVolumeSetting = -1;
+                }
             } else {
                 // For repeat rings, figure out by how much to delay
                 // the ring so that it happens the correct amount of
@@ -233,7 +259,7 @@ public class Ringer {
     }
 
     boolean shouldVibrate() {
-        int ringerMode = mAudioManager.getRingerMode();
+        int ringerMode = mAudioManager.getRingerMode();        
         if (CallFeaturesSetting.getVibrateWhenRinging(mContext)) {
             return ringerMode != AudioManager.RINGER_MODE_SILENT;
         } else {
@@ -368,6 +394,7 @@ public class Ringer {
                 }
             };
         }
+
         if (mRingThread == null) {
             mRingThread = new Worker("ringer");
             mRingHandler = new Handler(mRingThread.getLooper()) {
